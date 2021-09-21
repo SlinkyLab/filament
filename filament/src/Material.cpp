@@ -288,7 +288,8 @@ FMaterial::FMaterial(FEngine& engine, const Material::Builder& builder)
     if (UTILS_UNLIKELY(!mIsDefaultMaterial && !mHasCustomDepthShader)) {
         auto& cachedPrograms = mCachedPrograms;
         for (uint8_t i = 0, n = cachedPrograms.size(); i < n; ++i) {
-            if (Variant(i).isDepthPass()) {
+            const Variant v{ i };
+            if (v.isDepthPass() && !Variant::isReserved(i)) {
                 cachedPrograms[i] = engine.getDefaultMaterial()->getProgram(i);
             }
         }
@@ -430,7 +431,7 @@ Program FMaterial::getProgramBuilderWithVariants(
 
     ASSERT_POSTCONDITION(isNoop || (fsOK && fsBuilder.size() > 0),
             "The material '%s' has not been compiled to include the required "
-            "GLSL or SPIR-V chunks for the fragment shader (variant=0x%x, filterer=0x%x).",
+            "GLSL or SPIR-V chunks for the fragment shader (variant=0x%x, filtered=0x%x).",
             mName.c_str(), variantKey, fragmentVariantKey);
 
     Program pb;

@@ -313,8 +313,10 @@ void PostProcessManager::commitAndRender(FrameGraphResources::RenderPassInfo con
 // ------------------------------------------------------------------------------------------------
 
 FrameGraphId<FrameGraphTexture> PostProcessManager::structure(FrameGraph& fg,
-        RenderPass const& pass, uint32_t width, uint32_t height, float scale) noexcept {
+        RenderPass const& pass, uint32_t width, uint32_t height,
+        StructurePassConfig const& config) noexcept {
 
+    const float scale = config.scale;
 
     // structure pass -- automatically culled if not used, currently used by:
     //    - ssao
@@ -322,6 +324,7 @@ FrameGraphId<FrameGraphTexture> PostProcessManager::structure(FrameGraph& fg,
     // It consists of a mipmapped depth pass, tuned for SSAO
     struct StructurePassData {
         FrameGraphId<FrameGraphTexture> depth;
+        FrameGraphId<FrameGraphTexture> picking;
     };
 
     // sanitize a bit the user provided scaling factor
@@ -342,9 +345,18 @@ FrameGraphId<FrameGraphTexture> PostProcessManager::structure(FrameGraph& fg,
 
                 data.depth = builder.write(data.depth, FrameGraphTexture::Usage::DEPTH_ATTACHMENT);
 
+                if (config.picking) {
+                    data.picking = builder.createTexture("Picking Buffer", {
+                            .width = width, .height = height,
+                            .format = TextureFormat::R32UI });
+
+                    data.picking = builder.write(data.picking,
+                            FrameGraphTexture::Usage::COLOR_ATTACHMENT);
+                }
+
                 builder.declareRenderPass("Structure Target", {
-                        .attachments = { .depth = data.depth },
-                        .clearFlags = TargetBufferFlags::DEPTH
+                        .attachments = { .color = { data.picking }, .depth = data.depth },
+                        .clearFlags = TargetBufferFlags::COLOR0 | TargetBufferFlags::DEPTH
                 });
             },
             [=](FrameGraphResources const& resources,
@@ -393,6 +405,7 @@ FrameGraphId<FrameGraphTexture> PostProcessManager::structure(FrameGraph& fg,
             });
 
     fg.getBlackboard().put("structure", depth);
+    fg.getBlackboard().put("picking", structurePass->picking);
     return depth;
 }
 

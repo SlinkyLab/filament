@@ -184,6 +184,7 @@ public:
     bool needsShadowMap() const noexcept { return mNeedsShadowMap; }
     bool hasFog() const noexcept { return mFogOptions.enabled && mFogOptions.density > 0.0f; }
     bool hasVsm() const noexcept { return mShadowType == ShadowType::VSM; }
+    bool hasPicking() const noexcept { return false; /* TODO: implement this */ }
 
     void renderShadowMaps(FrameGraph& fg, FEngine& engine, FEngine::DriverApi& driver,
             RenderPass const& pass) noexcept;
