@@ -99,7 +99,7 @@ class GestureDetector(private val view: View, private val manipulator: Manipulat
                 }
 
                 if (isOrbitGesture()) {
-                    manipulator.grabBegin(touch.x, touch.y, false)
+                    manipulator.grabBegin(touch.x, 0, false)
                     currentGesture = Gesture.ORBIT
                     return
                 }
